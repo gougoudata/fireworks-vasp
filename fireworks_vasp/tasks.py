@@ -11,7 +11,6 @@ from fireworks import FireTaskBase, FWAction
 from custodian import Custodian
 from custodian.vasp.jobs import VaspJob
 from custodian.vasp.handlers import *
-from matgendb.creator import VaspToDbTaskDrone
 
 
 def load_class(mod, name):
