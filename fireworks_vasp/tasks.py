@@ -10,7 +10,7 @@ from pymatgen import Structure
 from fireworks import FireTaskBase, FWAction, explicit_serialize
 from custodian import Custodian
 from custodian.vasp.jobs import VaspJob
-from custodian.vasp.handlers import *
+from pymatgen.io.vaspio import Vasprun
 
 
 def load_class(mod, name):
@@ -20,6 +20,20 @@ def load_class(mod, name):
 
 @explicit_serialize
 class WriteVaspInputTask(FireTaskBase):
+    """
+    Writes VASP Input files.
+
+    Required params:
+        structure (dict): An input structure in pymatgen's Structure.to_dict
+            format.
+        vasp_input_set (str): A string name for the VASP input set. E.g.,
+            "MPVaspInputSet" or "MITVaspInputSet".
+
+    Optional params:
+        input_set_params (dict): If the input set requires some additional
+            parameters, specify them using input_set_params. E.g.,
+            {"user_incar_settings": ...}.
+    """
 
     required_params = ["structure", "vasp_input_set"]
     optional_params = ["input_set_params"]
@@ -46,6 +60,14 @@ class VaspCustodianTask(FireTaskBase):
             default args are assumed for all handlers for simplicity. A
             special option is "all", which simply uses a set of common
             handlers for relaxation jobs.
+
+    Optional params:
+        vasp_job_params (dict): Additional parameter settings as desired for
+            custodian's VaspJob.
+        custodian_params (dict): Additional parameter settings as desired for
+            Custodian. E.g., to use a scratch directory, you can have {
+            "scratch_dir": "..."} as specified in Custodian's scratch_dir
+            options.
     """
     required_params = ["vasp_cmd", "handlers"]
 
@@ -72,6 +94,9 @@ class VaspCustodianTask(FireTaskBase):
 
 @explicit_serialize
 class VaspAnalyzeTask(FireTaskBase):
+    """
+    Read in vasprun.xml and insert into Fireworks stored_data.
+    """
 
     optional_params = ["vasprun_fname"]
 
