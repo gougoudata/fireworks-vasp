@@ -1,0 +1,53 @@
+#!/usr/bin/env python
+
+__author__ = 'Shyue Ping Ong'
+__copyright__ = 'Copyright 2013, The Materials Project'
+__version__ = '0.1'
+__maintainer__ = 'Shyue Ping Ong'
+__email__ = 'ongsp@ucsd.edu'
+__date__ = '1/31/14'
+
+
+from pymatgen import read_structure
+from fireworks_vasp.tasks import *
+from fireworks import Workflow
+
+
+def create_workflow(args):
+    for f in args.structures:
+        s = read_structure(f)
+        fws = [
+            WriteVaspInputTask(structure=s, vasp_input_set="MPVaspInputSet"),
+            VaspCustodianTask(vasp_cmd=args.command.split(" "),
+                              handlers="all"),
+            VaspAnalyzeTask()
+        ]
+        wf = Workflow(fws)
+        wf.to_file("%s.yaml" % s.composition.reduced_formula)
+
+
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description="""
+    Simple VASP workflow creator.
+    """)
+
+    parser.add_argument(
+        "-c", "--command", dest="command", nargs="?",
+        default="pvasp", type=str,
+        help="VASP command. Defaults to pvasp. If you are using mpirun, "
+             "set this to something like \"mpirun pvasp\".")
+
+    parser.add_argument(
+        "-d", "--handlers", dest="handlers", nargs="+",
+        default="all", type=str,
+        help="Error handlers to use.")
+
+    parser.add_argument("structures", metavar="structures", type=str,
+                        nargs='+',
+                        help="Structures to create workflow for. Can be "
+                             "any of pymatgen's supported file formats such "
+                             "as POSCAR, CIF etc.")
+
+    args = parser.parse_args()
+    create_workflow(args)

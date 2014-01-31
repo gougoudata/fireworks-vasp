@@ -7,7 +7,7 @@ __date__ = '1/31/14'
 
 import logging
 from pymatgen import Structure
-from fireworks import FireTaskBase, FWAction
+from fireworks import FireTaskBase, FWAction, explicit_serialize
 from custodian import Custodian
 from custodian.vasp.jobs import VaspJob
 from custodian.vasp.handlers import *
@@ -18,6 +18,7 @@ def load_class(mod, name):
     return getattr(mod, name)
 
 
+@explicit_serialize
 class WriteVaspInputTask(FireTaskBase):
 
     required_params = ["structure", "vasp_input_set"]
@@ -32,6 +33,7 @@ class WriteVaspInputTask(FireTaskBase):
         vis.write_input(s, ".")
 
 
+@explicit_serialize
 class VaspCustodianTask(FireTaskBase):
     """
     Runs VASP using Custodian.
@@ -68,6 +70,7 @@ class VaspCustodianTask(FireTaskBase):
         return FWAction(stored_data=output)
 
 
+@explicit_serialize
 class VaspAnalyzeTask(FireTaskBase):
 
     optional_params = ["vasprun_fname"]
