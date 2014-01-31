@@ -10,20 +10,22 @@ __date__ = '1/31/14'
 
 from pymatgen import read_structure
 from fireworks_vasp.tasks import *
-from fireworks import Workflow
+from fireworks import FireWork
 
 
 def create_workflow(args):
-    for f in args.structures:
+    for i, f in enumerate(args.structures):
         s = read_structure(f)
-        fws = [
-            WriteVaspInputTask(structure=s, vasp_input_set="MPVaspInputSet"),
+        fw = FireWork([
+            WriteVaspInputTask(
+                structure=s.to_dict,
+                vasp_input_set="MPVaspInputSet"),
             VaspCustodianTask(vasp_cmd=args.command.split(" "),
-                              handlers="all"),
+                              handlers=args.handlers),
             VaspAnalyzeTask()
-        ]
-        wf = Workflow(fws)
-        wf.to_file("%s.yaml" % s.composition.reduced_formula)
+        ],
+                      name=args.name)
+        fw.to_file("%s_%d.yaml" % (s.composition.reduced_formula, i))
 
 
 if __name__ == "__main__":
@@ -37,6 +39,10 @@ if __name__ == "__main__":
         default="pvasp", type=str,
         help="VASP command. Defaults to pvasp. If you are using mpirun, "
              "set this to something like \"mpirun pvasp\".")
+
+    parser.add_argument(
+        "-n", "--name", dest="name", default="VASPFW", type=str,
+        help="Name for Firework")
 
     parser.add_argument(
         "-d", "--handlers", dest="handlers", nargs="+",
